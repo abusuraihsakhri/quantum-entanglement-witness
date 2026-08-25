@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-entanglement-witness"
+version = "2.0.0"
+description = "Entanglement Witness & Peres-Horodecki PPT Criterion Engine"
+readme = "README.md"
+authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security/Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+quantum-entanglement-witness = "entanglement_witness.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/abusuraihsakhri/quantum-entanglement-witness"
+Repository = "https://github.com/abusuraihsakhri/quantum-entanglement-witness.git"
