@@ -41,6 +41,42 @@ def assert_no_phi(text: str) -> None:
             raise SecurityException(f"PHI Outbound Guard Violation: Sensitive identifier detected with pattern {pattern.pattern}")
 
 
+def safe_resolve_path(file_path: str, must_exist: bool = False) -> str:
+    """Resolve a file path safely, preventing path traversal attacks."""
+    import pathlib
+
+    # Reject URLs and URIs outright
+    if "://" in file_path or file_path.startswith(("http:", "https:", "ftp:", "file:")):
+        raise PermissionError(f"Access denied: URL paths are not allowed: {file_path}")
+
+    # Reject UNC paths (network shares)
+    if file_path.startswith("\\\\") or file_path.startswith("//"):
+        raise PermissionError(f"Access denied: network paths are not allowed: {file_path}")
+
+    try:
+        resolved = pathlib.Path(file_path).resolve()
+    except (OSError, ValueError) as e:
+        raise ValueError(f"Invalid file path: {file_path}") from e
+
+    if must_exist and not resolved.exists():
+        raise FileNotFoundError(f"File not found: {resolved}")
+
+    # Prevent path traversal: reject system directories
+    path_str = str(resolved)
+    path_lower = path_str.lower()
+    dangerous_markers = [
+        "\\windows\\", "\\windows\\system32",
+        "\\etc\\", "/etc/",
+        "\\proc\\", "/proc/",
+        "\\sys\\", "/sys/",
+    ]
+    for marker in dangerous_markers:
+        if marker in path_lower:
+            raise PermissionError(f"Access denied to system path: {path_str}")
+
+    return str(resolved)
+
+
 class PHIGuard:
     @staticmethod
     def assert_no_phi(text: str) -> None:
@@ -57,7 +93,15 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "quantum-entanglement-witness-master-audit-key-2026")).encode("utf-8")
+        resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if not resolved_key:
+            raise RuntimeError(
+                "AUDIT_SECRET_KEY environment variable must be set. "
+                "Do not use hardcoded defaults in production."
+            )
+        if len(resolved_key) < 16:
+            raise ValueError("AUDIT_SECRET_KEY must be at least 16 characters long for cryptographic security.")
+        self.secret_key = resolved_key.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
@@ -93,21 +137,34 @@ class AuditTrail:
         return self.logs
 
 
-GLOBAL_AUDIT = AuditTrail()
+_GLOBAL_AUDIT: Optional[AuditTrail] = None
+
+
+def _get_global_audit() -> AuditTrail:
+    global _GLOBAL_AUDIT
+    if _GLOBAL_AUDIT is None:
+        _GLOBAL_AUDIT = AuditTrail()
+    return _GLOBAL_AUDIT
 
 
 class AuditLogger:
     @staticmethod
     def log(actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        return GLOBAL_AUDIT.log(actor, actor_tier, event_type, details)
+        return _get_global_audit().log(actor, actor_tier, event_type, details)
 
     @staticmethod
     def get_trail() -> List[Dict[str, Any]]:
-        return GLOBAL_AUDIT.get_trail()
+        return _get_global_audit().get_trail()
 
     @staticmethod
     def verify_integrity() -> bool:
-        return GLOBAL_AUDIT.verify_integrity()
+        return _get_global_audit().verify_integrity()
+
+    @staticmethod
+    def reset():
+        """Reset the global audit instance (useful for testing)."""
+        global _GLOBAL_AUDIT
+        _GLOBAL_AUDIT = None
 
 
 class ActionExecutor:
