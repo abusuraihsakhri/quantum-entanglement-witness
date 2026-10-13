@@ -1,5 +1,5 @@
 """
-Command-Line Interface for Entanglement Witness & Peres-Horodecki PPT Criterion Agent.
+Command-Line Interface for Quantum Entanglement Witness (PPT calculation plus legacy telemetry).
 """
 import argparse
 import csv
@@ -18,7 +18,7 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Audit
-    p_audit = subparsers.add_parser("audit", help="Run single task evaluation")
+    p_audit = subparsers.add_parser("audit", help="Run legacy heuristic telemetry (not PPT)")
     p_audit.add_argument("--task-id", default="TASK-2026-001")
     p_audit.add_argument("--target", default="TARGET-GEN-01")
     p_audit.add_argument("--primary", type=float, default=29.4)
@@ -58,7 +58,7 @@ def main(argv=None):
         dossier = coordinator.process(payload)
         print("=" * 80)
         print(f"  ENTANGLEMENT WITNESS & PERES-HORODECKI PPT CRITERION AGENT")
-        print(f"  Domain: Quantum Information | Standard: Peres-Horodecki PPT Criterion")
+        print(f"  Legacy heuristic thresholds (not a quantum PPT evaluation)")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
