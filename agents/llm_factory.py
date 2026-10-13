@@ -1,5 +1,5 @@
 """
-Inference Engine supporting local Ollama, Claude, OpenAI, and deterministic Mock with Zero-PHI checks.
+Deterministic local mock responder. External model providers are not implemented.
 """
 from typing import Dict, Any, Optional
 from .base import PHIGuard
@@ -11,11 +11,11 @@ class MockLLM:
 
     def invoke(self, prompt: str) -> str:
         PHIGuard.assert_no_phi(prompt)
-        return f"[{self.system_name} Deterministic Verification Engine]: Mock response only; no scientific analysis performed. Received inquiry: '{prompt[:60]}...'."
+        return f"[{self.system_name} Deterministic Mock Responder]: Mock response only; no scientific analysis performed. Received inquiry: '{prompt[:60]}...'."
 
 
 class LLMFactory:
-    """Creates configured LLM client instances with zero-PHI protection."""
+    """Creates the deterministic mock client; other providers are unsupported."""
 
     @staticmethod
     def create(provider: str = "mock", system_name: str = "Quantum Entanglement Witness"):
