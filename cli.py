@@ -7,6 +7,7 @@ import json
 import sys
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
+from entanglement_witness.ppt_cli import run_ppt_file
 from agents.base import AuditLogger, safe_resolve_path
 
 supervisor = SystemSupervisor(model_provider="mock")
@@ -24,6 +25,10 @@ def main(argv=None):
     p_audit.add_argument("--secondary", type=float, default=14.2)
     p_audit.add_argument("--critical", action="store_true")
     p_audit.add_argument("--status", default="DISCORDANT")
+
+    # Physical density matrix PPT analysis
+    p_ppt = subparsers.add_parser("ppt", help="Analyze a physical density matrix using the PPT criterion")
+    p_ppt.add_argument("-i", "--input", required=True, help="JSON with matrix and optional dimensions")
 
     # Chat
     p_chat = subparsers.add_parser("chat", help="System configuration query")
@@ -67,6 +72,9 @@ def main(argv=None):
         print(f"\n  HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
         print("=" * 80)
         return 0
+
+    if args.command == "ppt":
+        return run_ppt_file(args.input)
 
     if args.command == "chat":
         ans = supervisor.query_supervisory_chat(" ".join(args.query))
