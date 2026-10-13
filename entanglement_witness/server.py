@@ -4,13 +4,14 @@ FastAPI REST API Server for Entanglement Witness & Peres-Horodecki PPT Criterion
 from typing import Dict, Any
 from .models import FrontierPayload
 from .agents import EntanglementCoordinator
+from .ppt import analyze_density_matrix, InvalidDensityMatrix
 
 coordinator = EntanglementCoordinator()
 
 
 def create_app():
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, HTTPException
         from pydantic import BaseModel
 
         app = FastAPI(
@@ -27,6 +28,10 @@ def create_app():
             status_descriptor: str = "DISCORDANT_ANOMALY"
             is_critical_flag: bool = True
             attributes: Dict[str, Any] = {}
+
+        class PPTRequest(BaseModel):
+            matrix: list[list[Any]]
+            dimensions: list[int] = [2, 2]
 
         class ChatRequest(BaseModel):
             query: str
@@ -47,6 +52,13 @@ def create_app():
                 attributes=req.attributes,
             )
             return coordinator.process(payload)
+
+        @app.post("/api/ppt")
+        def api_ppt(req: PPTRequest):
+            try:
+                return analyze_density_matrix(req.matrix, req.dimensions)
+            except (InvalidDensityMatrix, ValueError, TypeError) as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         @app.post("/api/chat")
         def api_chat(req: ChatRequest):
