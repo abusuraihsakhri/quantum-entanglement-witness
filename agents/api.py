@@ -7,14 +7,20 @@ from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
+from entanglement_witness.ppt import analyze_density_matrix, InvalidDensityMatrix
 
 supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Quantum Entanglement Witness API",
-    description="Enterprise Distributed Component Platform (Post-Quantum Cryptography & Hardware Security)",
+    description="PPT analysis plus legacy threshold-based telemetry",
     version="3.0.0-ENTERPRISE",
 )
+
+
+class PPTRequest(BaseModel):
+    matrix: List[List[Any]]
+    dimensions: List[int] = [2, 2]
 
 
 class ChatRequest(BaseModel):
@@ -53,3 +59,12 @@ def api_chat(req: ChatRequest):
 @app.get("/api/audit/logs")
 def api_audit_logs():
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
+
+
+@app.post("/api/ppt")
+def api_ppt(request: PPTRequest):
+    """Compute PPT spectra, negativity and an NPT witness for 2x2 or 2x3."""
+    try:
+        return analyze_density_matrix(request.matrix, request.dimensions)
+    except (InvalidDensityMatrix, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
