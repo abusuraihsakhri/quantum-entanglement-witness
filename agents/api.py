@@ -14,7 +14,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 app = FastAPI(
     title="Quantum Entanglement Witness API",
     description="PPT analysis plus legacy threshold-based telemetry",
-    version="3.0.0-ENTERPRISE",
+    version="2.1.0",
 )
 
 
@@ -29,7 +29,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "quantum-entanglement-witness", "domain": "Post-Quantum Cryptography & Hardware Security", "standard": "NIST FIPS 203/204/205 / ISO/IEC 17825 Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "quantum-entanglement-witness", "domain": "Quantum information / legacy telemetry", "standard": "Peres–Horodecki PPT (for /api/ppt)", "version": "2.1.0"}
 
 
 @app.get("/metrics")
