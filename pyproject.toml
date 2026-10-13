@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantum-entanglement-witness"
-version = "2.0.0"
-description = "Entanglement Witness & Peres-Horodecki PPT Criterion Engine"
+version = "2.1.0"
+description = "Two-qubit and qubit–qutrit PPT criterion, negativity and witness calculations"
 readme = "README.md"
 authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
 license = { text = "MIT" }
@@ -13,11 +13,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Topic :: Security/Cryptography",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = ["numpy>=1.24,<3", "pydantic>=2,<3"]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.110,<1", "uvicorn>=0.29,<1"]
+test = ["pytest>=8,<10"]
 
 [project.scripts]
 quantum-entanglement-witness = "entanglement_witness.cli:main"
@@ -25,6 +28,12 @@ quantum-entanglement-witness = "entanglement_witness.cli:main"
 [project.urls]
 Homepage = "https://github.com/abusuraihsakhri/quantum-entanglement-witness"
 Repository = "https://github.com/abusuraihsakhri/quantum-entanglement-witness.git"
+
+[tool.setuptools]
+py-modules = ["cli", "enrichment", "simulator"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "entanglement_witness*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
