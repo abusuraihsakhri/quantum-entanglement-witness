@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Local, browser-based Bell-diagonal two-qubit entanglement witness calculator.">
+  <title>Quantum Entanglement Witness | PPT Calculator</title>
+  <style>
+    :root { color-scheme: dark; --bg: #0b1020; --panel: #151e31; --border: #35425a; --text: #f4f6fd; --muted: #b8c5d9; --accent: #90bcff; --success: #7de2b1; --danger: #ffafa8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { width: min(1060px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 55px; }
+    h1 { margin: 0 0 9px; font-size: clamp(1.65rem, 3.5vw, 2.45rem); line-height: 1.2; }
+    h2 { margin: 0 0 13px; font-size: 1.2rem; }
+    h3 { font-size: 1rem; margin: 19px 0 7px; }
+    p { margin: 0 0 14px; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 23px; margin-bottom: 25px; }
+    .eyebrow { color: var(--accent); font-size: .76rem; text-transform: uppercase; letter-spacing: .13em; font-weight: 750; margin-bottom: 10px; }
+    .muted { color: var(--muted); }
+    .grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 20px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); padding: 22px; border-radius: 14px; min-width: 0; }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 13px 0 20px; }
+    button { background: #253651; color: var(--text); border: 1px solid #58739a; border-radius: 8px; padding: 10px 13px; font: inherit; cursor: pointer; }
+    button.primary { background: #3776cb; border-color: #79b0ff; color: white; font-weight: 700; width: 100%; margin-top: 5px; }
+    button:hover { filter: brightness(1.15); }
+    :is(input,button):focus-visible { outline: 3px solid #a9d0ff; outline-offset: 3px; }
+    .input-row { display: grid; grid-template-columns: minmax(0,1fr) 116px; gap: 10px; align-items: center; margin: 12px 0; }
+    label { font-weight: 650; }
+    input { min-width: 0; width: 100%; border-radius: 8px; border: 1px solid #65748d; background: #0c1426; color: white; padding: 9px 11px; font: inherit; }
+    .hint { font-size: .84rem; color: var(--muted); }
+    .error { color: var(--danger); min-height: 24px; font-weight: 650; }
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 17px; }
+    .metric { background: #0e182a; padding: 15px; border: 1px solid var(--border); border-radius: 10px; }
+    .metric span { display: block; font-size: .82rem; color: var(--muted); }
+    .metric strong { font-size: 1.35rem; word-break: break-word; }
+    .positive { color: var(--success); }
+    .negative { color: var(--danger); }
+    .math { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .92rem; overflow-wrap: anywhere; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 650; }
+    td:last-child { text-align: right; }
+    .spectrum { display: grid; grid-template-columns: 72px minmax(0,1fr) 72px; gap: 8px; align-items: center; margin: 9px 0; font-size: .86rem; font-variant-numeric: tabular-nums; }
+    .track { height: 10px; background: #2a3549; border-radius: 6px; position: relative; overflow: hidden; }
+    .fill { height: 100%; background: var(--success); border-radius: 6px; }
+    .fill.neg { background: var(--danger); }
+    .notes { margin-top: 20px; }
+    .notes p { font-size: .9rem; }
+    a { color: #b5d4ff; }
+    [hidden] { display: none !important; }
+    @media (max-width: 750px) { .grid { grid-template-columns: 1fr; } main { padding-top: 22px; } .panel { padding: 18px; } }
+    @media (max-width: 400px) { .results { grid-template-columns: 1fr; } .input-row { grid-template-columns: minmax(0,1fr) 95px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Quantum information · Two-qubit analyzer</div>
+      <h1>Quantum Entanglement Witness</h1>
+      <p class="muted">Evaluate the Peres–Horodecki partial-transpose (PPT) criterion for <strong>Bell-diagonal</strong> two-qubit density matrices. All calculations run locally in your browser.</p>
+    </header>
+    <div class="grid">
+      <section class="panel" aria-labelledby="inputs-heading">
+        <h2 id="inputs-heading">Bell-state populations</h2>
+        <p class="muted">A Bell-diagonal state is a mixture of the four Bell projectors. Enter probabilities between 0 and 1 that sum to 1.</p>
+        <div class="preset-row" role="group" aria-label="Example states">
+          <button type="button" data-preset="1,0,0,0">Bell state</button>
+          <button type="button" data-preset="0.7,0.1,0.1,0.1">Noisy Bell state</button>
+          <button type="button" data-preset="0.25,0.25,0.25,0.25">Maximally mixed</button>
+        </div>
+        <form id="state-form" novalidate>
+          <div class="input-row"><label for="p0">Φ+ (|00⟩ + |11⟩)/√2</label><input id="p0" type="number" min="0" max="1" step="any" required value="0.7"></div>
+          <div class="input-row"><label for="p1">Φ− (|00⟩ − |11⟩)/√2</label><input id="p1" type="number" min="0" max="1" step="any" required value="0.1"></div>
+          <div class="input-row"><label for="p2">Ψ+ (|01⟩ + |10⟩)/√2</label><input id="p2" type="number" min="0" max="1" step="any" required value="0.1"></div>
+          <div class="input-row"><label for="p3">Ψ− (|01⟩ − |10⟩)/√2</label><input id="p3" type="number" min="0" max="1" step="any" required value="0.1"></div>
+          <p class="hint" id="sum">Total probability: 1.0000</p>
+          <p id="error" class="error" role="alert" aria-live="polite"></p>
+          <button type="submit" class="primary">Analyze entanglement</button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="results-heading">
+        <h2 id="results-heading">PPT analysis</h2>
+        <div id="output" aria-live="polite">
+          <div class="results">
+            <div class="metric"><span>Classification</span><strong id="classification"></strong></div>
+            <div class="metric"><span>Negativity</span><strong id="negativity"></strong></div>
+            <div class="metric"><span>Minimum PPT eigenvalue</span><strong id="minimum"></strong></div>
+            <div class="metric"><span>Witness expectation</span><strong id="witness"></strong></div>
+          </div>
+          <p id="interpretation" class="muted"></p>
+          <h3>Partial-transpose eigenvalues</h3>
+          <div id="spectrum"></div>
+          <h3>Density matrix ρ</h3>
+          <p class="hint">Computational basis: |00⟩, |01⟩, |10⟩, |11⟩</p>
+          <div style="overflow-x:auto"><table aria-label="Density matrix"><tbody id="matrix"></tbody></table></div>
+          <p class="math" id="witness-operator"></p>
+          <button id="export" type="button">Export result (JSON)</button>
+        </div>
+      </section>
+    </div>
+    <section class="panel notes" aria-labelledby="notes-heading">
+      <h2 id="notes-heading">Interpretation and scope</h2>
+      <p>For a two-qubit state, a negative eigenvalue of ρ<sup>T<sub>B</sub></sup> proves entanglement. A non-negative partial transpose establishes separability. The negativity is the sum of the absolute values of negative eigenvalues.</p>
+      <p>The projective witness <span class="math">W = I/2 − |Bell⟩⟨Bell|</span>, chosen for the largest Bell-state population, has expectation <span class="math">1/2 − p<sub>max</sub></span>. A negative value detects entanglement. Numerical results here apply to <strong>Bell-diagonal states only</strong>; the Python package supports general 2×2 and 2×3 density matrices with complex entries.</p>
+      <p class="hint">This page has no server calls, trackers, uploads, or data storage. It does not simulate measurements, estimate experimental uncertainty, or handle multipartite entanglement.</p>
+    </section>
+  </main>
+  <script>
+    "use strict";
+    const labels = ["Φ+", "Φ−", "Ψ+", "Ψ−"];
+    const inputs = [0, 1, 2, 3].map(function(i) { return document.getElementById("p" + i); });
+    const form = document.getElementById("state-form");
+    let lastResult = null;
+    function format(value) {
+      return (Math.abs(value) < 1e-12 ? 0 : value).toFixed(6);
+    }
+    function calculate() {
+      const p = inputs.map(function(input) { return input.value.trim() === "" ? NaN : Number(input.value); });
+      const sum = p.reduce(function(a, b) { return a + b; }, 0);
+      document.getElementById("sum").textContent = "Total probability: " + (Number.isFinite(sum) ? sum.toFixed(4) : "invalid");
+      if (p.some(function(x) { return !Number.isFinite(x) || x < 0 || x > 1; })) {
+        throw new Error("Each population must be a finite number from 0 to 1.");
+      }
+      if (Math.abs(sum - 1) > 1e-8) {
+        throw new Error("Populations must sum to 1 (current sum: " + sum.toFixed(6) + ").");
+      }
+      const a = (p[0] + p[1]) / 2;
+      const b = (p[2] + p[3]) / 2;
+      const c = (p[0] - p[1]) / 2;
+      const d = (p[2] - p[3]) / 2;
+      const rho = [[a,0,0,c],[0,b,d,0],[0,d,b,0],[c,0,0,a]];
+      const eigenvalues = [a + d, a - d, b + c, b - c].sort(function(x,y) { return x-y; });
+      const negativity = eigenvalues.reduce(function(total, x) { return total + Math.max(0, -x); }, 0);
+      const maxProbability = Math.max.apply(null, p);
+      const selectedState = labels[p.indexOf(maxProbability)];
+      return {
+        model: "Bell-diagonal two-qubit state",
+        populations: Object.fromEntries(labels.map(function(label,i) { return [label, p[i]]; })),
+        density_matrix: rho,
+        ppt_eigenvalues: eigenvalues,
+        negativity: negativity,
+        minimum_eigenvalue: eigenvalues[0],
+        classification: eigenvalues[0] < -1e-10 ? "entangled" : "separable",
+        witness: "I/2 - |" + selectedState + "><" + selectedState + "|",
+        witness_expectation: 0.5 - maxProbability
+      };
+    }
+    function render(result) {
+      document.getElementById("output").hidden = false;
+      const classification = document.getElementById("classification");
+      classification.textContent = result.classification === "entangled" ? "Entangled (NPT)" : "Separable (PPT)";
+      classification.className = result.classification === "entangled" ? "negative" : "positive";
+      document.getElementById("negativity").textContent = format(result.negativity);
+      document.getElementById("minimum").textContent = format(result.minimum_eigenvalue);
+      document.getElementById("witness").textContent = format(result.witness_expectation);
+      document.getElementById("interpretation").textContent = result.classification === "entangled"
+        ? "Negative partial transpose: the chosen witness detects this state's entanglement."
+        : "Positive partial transpose: this Bell-diagonal two-qubit state is separable.";
+      document.getElementById("witness-operator").textContent = "Selected operator: " + result.witness;
+      const spectrum = document.getElementById("spectrum");
+      spectrum.replaceChildren();
+      result.ppt_eigenvalues.forEach(function(value,i) {
+        const row = document.createElement("div"); row.className = "spectrum";
+        const name = document.createElement("span"); name.textContent = "λ" + (i + 1);
+        const track = document.createElement("div"); track.className = "track";
+        const fill = document.createElement("div"); fill.className = "fill" + (value < -1e-10 ? " neg" : "");
+        fill.style.width = (Math.min(1, Math.abs(value) / 0.5) * 100) + "%";
+        track.appendChild(fill);
+        const v = document.createElement("span"); v.textContent = format(value);
+        row.append(name, track, v); spectrum.appendChild(row);
+      });
+      const matrix = document.getElementById("matrix");
+      matrix.replaceChildren();
+      result.density_matrix.forEach(function(row) {
+        const tr = document.createElement("tr");
+        row.forEach(function(value) {
+          const td = document.createElement("td"); td.className = "math"; td.textContent = format(value);
+          tr.appendChild(td);
+        });
+        matrix.appendChild(tr);
+      });
+    }
+    function update() {
+      try {
+        const result = calculate();
+        document.getElementById("error").textContent = "";
+        lastResult = result;
+        render(result);
+      } catch (error) {
+        lastResult = null;
+        document.getElementById("output").hidden = true;
+        document.getElementById("error").textContent = error.message;
+      }
+    }
+    form.addEventListener("submit", function(event) { event.preventDefault(); update(); });
+    inputs.forEach(function(input) { input.addEventListener("input", update); });
+    document.querySelectorAll("[data-preset]").forEach(function(button) {
+      button.addEventListener("click", function() {
+        const values = button.getAttribute("data-preset").split(",");
+        inputs.forEach(function(input,i) { input.value = values[i]; });
+        update();
+      });
+    });
+    document.getElementById("export").addEventListener("click", function() {
+      if (!lastResult) return;
+      const blob = new Blob([JSON.stringify(lastResult, null, 2) + "\n"], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "entanglement-witness-result.json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    });
+    update();
+  </script>
+</body>
+</html>
