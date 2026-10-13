@@ -1,44 +1,42 @@
-name: Quantum Entanglement Witness CI/CD & Security Verification
+name: Quantum Entanglement Witness CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [master, main]
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
+
+permissions:
+  contents: read
 
 jobs:
-  test-and-audit:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install fastapi uvicorn pydantic pytest
-
-    - name: Run Pytest Suite
-      env:
-        AUDIT_SECRET_KEY: ci-test-audit-secret-key-32chars-long
-      run: |
-        pytest -v
-
-    - name: Security SAST & Zero-PHI Audit
-      env:
-        AUDIT_SECRET_KEY: ci-test-audit-secret-key-32chars-long
-      run: |
-        python -c "
-        from agents.base import PHIGuard, AuditLogger
-        import pytest
-        assert AuditLogger.verify_integrity() is True
-        print('Security & Zero-PHI Audit Passed!')
-        "
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[server,test]"
+      - name: Compile Python sources
+        run: python -m compileall -q agents entanglement_witness cli.py enrichment.py simulator.py
+      - name: Validate browser script syntax
+        run: |
+          node -e 'const s=require("fs").readFileSync("index.html","utf8"); const m=s.match(/<script>([\s\S]*?)<\/script>/); if (!m) throw Error("Missing script"); new Function(m[1]);'
+      - name: Run tests
+        env:
+          AUDIT_SECRET_KEY: ci-test-audit-secret-key-32chars-long
+        run: python -m pytest -q
+      - name: Check package command
+        env:
+          AUDIT_SECRET_KEY: ci-test-audit-secret-key-32chars-long
+        run: quantum-entanglement-witness --help

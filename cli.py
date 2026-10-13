@@ -7,6 +7,7 @@ import json
 import sys
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
+from entanglement_witness.ppt_cli import run_ppt_file
 from agents.base import AuditLogger, safe_resolve_path
 
 supervisor = SystemSupervisor(model_provider="mock")
@@ -17,13 +18,17 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Audit
-    p_audit = subparsers.add_parser("audit", help="Run single task evaluation")
+    p_audit = subparsers.add_parser("audit", help="Run legacy heuristic telemetry (not PPT)")
     p_audit.add_argument("--task-id", default="TASK-2026-001")
     p_audit.add_argument("--target", default="KEY-TARGET-01")
     p_audit.add_argument("--primary", type=float, default=28.5)
     p_audit.add_argument("--secondary", type=float, default=14.2)
     p_audit.add_argument("--critical", action="store_true")
     p_audit.add_argument("--status", default="DISCORDANT")
+
+    # Physical density matrix PPT analysis
+    p_ppt = subparsers.add_parser("ppt", help="Analyze a physical density matrix using the PPT criterion")
+    p_ppt.add_argument("-i", "--input", required=True, help="JSON with matrix and optional dimensions")
 
     # Chat
     p_chat = subparsers.add_parser("chat", help="System configuration query")
@@ -56,7 +61,7 @@ def main(argv=None):
         dossier = supervisor.process_task(payload)
         print("=" * 80)
         print(f"  QUANTUM ENTANGLEMENT WITNESS")
-        print(f"  Domain: Post-Quantum Cryptography & Hardware Security | Standard: NIST FIPS 203/204/205 / ISO/IEC 17825 Standards")
+        print(f"  Legacy heuristic telemetry (not a quantum PPT evaluation)")
         print(f"  Dossier ID: {dossier.dossier_id} | Urgency: [{dossier.overall_urgency.value}]")
         print("=" * 80)
         for a in dossier.alerts:
@@ -67,6 +72,9 @@ def main(argv=None):
         print(f"\n  HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
         print("=" * 80)
         return 0
+
+    if args.command == "ppt":
+        return run_ppt_file(args.input)
 
     if args.command == "chat":
         ans = supervisor.query_supervisory_chat(" ".join(args.query))

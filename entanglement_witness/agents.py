@@ -1,5 +1,5 @@
 """
-Distributed Component Coordination & Executive Hierarchy for Entanglement Witness & Peres-Horodecki PPT Criterion Agent.
+Compatibility agents running arbitrary legacy thresholds; not a PPT calculation.
 Domain: Quantum Information
 """
 import uuid
@@ -105,6 +105,6 @@ class EntanglementCoordinator:
         if "status" in q or "ledger" in q:
             return f"Entanglement Witness & Peres-Horodecki PPT Criterion Agent currently managing {len(self.execution_ledger)} execution tasks in air-gapped memory."
         elif "standard" in q or "spec" in q:
-            return "Active runtime operating strictly according to Peres-Horodecki PPT Criterion specifications."
+            return "Use the numerical Peres-Horodecki PPT Criterion via the ppt command or /api/ppt; legacy audit thresholds are unrelated."
         else:
             return f"Entanglement Witness & Peres-Horodecki PPT Criterion Agent executive coordinator online. Zero-telemetry on-premises surveillance active."

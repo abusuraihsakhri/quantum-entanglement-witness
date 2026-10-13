@@ -1,5 +1,5 @@
 """
-Command-Line Interface for Entanglement Witness & Peres-Horodecki PPT Criterion Agent.
+Command-Line Interface for Quantum Entanglement Witness (PPT calculation plus legacy telemetry).
 """
 import argparse
 import csv
@@ -7,6 +7,7 @@ import json
 import sys
 from .models import FrontierPayload
 from .agents import EntanglementCoordinator
+from .ppt_cli import run_ppt_file
 from agents.base import safe_resolve_path
 
 coordinator = EntanglementCoordinator()
@@ -17,13 +18,17 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Audit
-    p_audit = subparsers.add_parser("audit", help="Run single task evaluation")
+    p_audit = subparsers.add_parser("audit", help="Run legacy heuristic telemetry (not PPT)")
     p_audit.add_argument("--task-id", default="TASK-2026-001")
     p_audit.add_argument("--target", default="TARGET-GEN-01")
     p_audit.add_argument("--primary", type=float, default=29.4)
     p_audit.add_argument("--secondary", type=float, default=15.1)
     p_audit.add_argument("--critical", action="store_true")
     p_audit.add_argument("--status", default="DISCORDANT")
+
+    # Physical density matrix PPT analysis
+    p_ppt = subparsers.add_parser("ppt", help="Analyze a physical density matrix using the PPT criterion")
+    p_ppt.add_argument("-i", "--input", required=True, help="JSON with matrix and optional dimensions")
 
     # Chat
     p_chat = subparsers.add_parser("chat", help="System configuration query")
@@ -53,7 +58,7 @@ def main(argv=None):
         dossier = coordinator.process(payload)
         print("=" * 80)
         print(f"  ENTANGLEMENT WITNESS & PERES-HORODECKI PPT CRITERION AGENT")
-        print(f"  Domain: Quantum Information | Standard: Peres-Horodecki PPT Criterion")
+        print(f"  Legacy heuristic thresholds (not a quantum PPT evaluation)")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -63,6 +68,9 @@ def main(argv=None):
             print(f"  Action:  {a['actionable_remediation']}")
         print("\n" + "=" * 80)
         return 0
+
+    if args.command == "ppt":
+        return run_ppt_file(args.input)
 
     if args.command == "chat":
         ans = coordinator.query_supervisory_chat(" ".join(args.query))

@@ -1,175 +1,99 @@
 # Quantum Entanglement Witness
 
-> **Domain:** Post-Quantum Cryptography & Zero-Knowledge Architecture
-> **Standards:** NIST FIPS 203/204/205, NIST SP 800-90B, ISO/IEC Standards
+Numerical Peres–Horodecki positive-partial-transpose (PPT) analysis for **2×2 and 2×3 bipartite quantum density matrices**, plus a browser calculator for **two-qubit Bell-diagonal states**.
 
-<div align="center">
+## Features
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+- Checks input density matrices for dimensions, finite elements, Hermiticity, unit trace and positive semidefiniteness.
+- Computes eigenvalues of the partial transpose on subsystem B and **negativity** (sum of absolute values of negative eigenvalues).
+- Classifies supported states as entangled (NPT) or separable (PPT). In 2×2 and 2×3 dimensions the PPT criterion is necessary and sufficient.
+- For NPT states, constructs an entanglement witness `W = (|v⟩⟨v|)ᵀᴮ` from a negative partial-transpose eigenvector and returns its expectation value.
+- Includes JSON CLI and FastAPI endpoints.
+- Includes a standalone client-side [browser calculator](index.html) for Bell-diagonal two-qubit states (no backend required).
+- Retains the original generic threshold-based telemetry, audit and batch commands for compatibility. **Those legacy commands are not quantum PPT calculations.**
 
-</div>
+## Browser application
 
----
+Open `index.html` in a current desktop or mobile browser, or serve the repository root over HTTP. Select a preset or enter four Bell-state probabilities that sum to 1; the page computes the PPT eigenvalue spectrum, negativity, witness expectation and 4×4 state matrix. Results can be exported as JSON.
 
-## Overview
+The static-site deployment workflow is in `.github/workflows/pages.yml`. GitHub Pages must be enabled with **GitHub Actions** as its source in repository settings; the live address is not advertised until deployment is confirmed.
 
-Quantum Entanglement Witness is an enterprise-grade analytical platform that evaluates quantum cryptographic tasks using specialized worker agents. It provides:
+**Privacy:** The browser calculator runs without API calls, tracking, browser storage or uploads. The Python API runs calculations on the server where you install it; do not deploy the unauthenticated API on a public network.
 
-- **Multi-agent consensus evaluation** with specialized workers for invariant QC, safety escalation, and protocol conformance
-- **Zero-PHI outbound guard** that blocks sensitive identifiers (SSNs, MRNs, phone numbers, emails) from leaving the system
-- **Tamper-evident HMAC-SHA256 audit trail** with chained cryptographic signatures
-- **FastAPI REST API** with health, metrics, and audit endpoints
-- **Peres-Horodecki PPT Criterion** engine for entanglement witness calculations
+## Install
 
----
-
-## Architecture
-
-```
-quantum-entanglement-witness/
-├── agents/                          # Enterprise analytical suite
-│   ├── base.py                      # PHI guard, audit trail, security
-│   ├── models.py                    # Pydantic v2 data models
-│   ├── workers.py                   # Specialized evaluation workers
-│   ├── supervisor.py                # Multi-agent orchestrator
-│   ├── api.py                       # FastAPI REST endpoints
-│   ├── llm_factory.py               # LLM provider abstraction
-│   ├── learning.py                  # Bayesian calibration engine
-│   ├── metrics.py                   # Prometheus metrics exporter
-│   └── streamer.py                  # WebSocket telemetry broadcaster
-├── entanglement_witness/             # Peres-Horodecki PPT criterion agent
-│   ├── models.py                    # Frontier data models
-│   ├── agents.py                    # Sub-agents and coordinator
-│   ├── engine.py                    # Core algorithmic engine
-│   ├── cli.py                       # CLI for PPT criterion agent
-│   └── server.py                    # FastAPI server for PPT agent
-├── tests/                           # Test suite
-├── web/                             # Operations console (HTML)
-├── cli.py                           # Main CLI entry point
-├── enrichment.py                    # Domain enrichment engines
-├── simulator.py                     # High-throughput stress testing
-├── docker-compose.yml               # Container orchestration
-└── pyproject.toml                   # Project configuration
-```
-
----
-
-## Installation
+Requires Python 3.9 or newer. From the repository root:
 
 ```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/quantum-entanglement-witness.git
-cd quantum-entanglement-witness
-
-# Install dependencies
-pip install fastapi uvicorn pydantic pytest
-
-# Copy environment template and configure
-cp .env.example .env
-# Edit .env and set AUDIT_SECRET_KEY to a secure random value
+python -m pip install -e ".[server,test]"
+python -m pytest -q
 ```
 
-### Environment Variables
+For the numerical Python API alone, `python -m pip install -e .` installs NumPy and Pydantic. The optional `server` extra installs FastAPI and Uvicorn.
 
-| Variable | Description | Required |
-|:---------|:------------|:---------|
-| `AUDIT_SECRET_KEY` | HMAC-SHA256 audit signing key (min 16 chars) | Yes |
-| `MODEL_PROVIDER` | LLM provider: `mock`, `ollama`, `claude`, `openai` | No (default: `mock`) |
+## Calculate a PPT witness
 
----
-
-## CLI Usage
-
-### 1. Single Task Evaluation
 ```bash
-python cli.py audit --task-id TASK-001 --target KEY-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
+quantum-entanglement-witness ppt --input examples/bell_state.json
+# Equivalent, when running the source checkout:
+python cli.py ppt --input examples/bell_state.json
 ```
 
-### 2. Supervisory Chat Query
-```bash
-python cli.py chat "What is the system status?"
+Expected for the supplied Bell state: partial-transpose eigenvalues `[-0.5, 0.5, 0.5, 0.5]`, negativity `0.5`, classification `entangled`, and witness expectation `-0.5`.
+
+Python usage:
+
+```python
+from entanglement_witness.ppt import analyze_density_matrix
+
+rho = [
+    [0.5, 0, 0, 0.5],
+    [0,   0, 0,   0],
+    [0,   0, 0,   0],
+    [0.5, 0, 0, 0.5],
+]
+print(analyze_density_matrix(rho, dimensions=(2, 2)))
 ```
 
-### 3. Batch CSV Processing
+Complex matrix elements can be provided as `[real, imaginary]` pairs in JSON. The basis ordering is `|a,b⟩` with subsystem B as the transposed subsystem; allowed dimensions are `[2,2]`, `[2,3]` and `[3,2]`.
+
+A non-physical matrix is rejected rather than silently normalized. Numerical classification uses a tolerance of `1e-9`; experimental reconstructions should be validated with an uncertainty model instead of treating borderline eigenvalues as conclusive.
+
+## HTTP API
+
 ```bash
+# Set AUDIT_SECRET_KEY only if using legacy audit endpoints:
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+python cli.py serve --host 127.0.0.1 --port 8000
+
+curl --fail -X POST http://127.0.0.1:8000/api/ppt \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/bell_state.json
+```
+
+`POST /api/ppt` performs the numerical analysis and returns HTTP 422 on an invalid matrix. `GET /health`, `POST /api/audit`, `POST /api/chat`, `GET /metrics` and `GET /api/audit/logs` remain for the **legacy operational interface**, which is not a quantum state analyzer.
+
+## Legacy commands
+
+```bash
+python cli.py audit --primary 28.5 --secondary 14.2
 python cli.py batch -i sample.csv -o results.csv
-```
-
-### 4. Verify Audit Trail Integrity
-```bash
 python cli.py verify-audit
 ```
 
-### 5. Launch REST API Server
-```bash
-python cli.py serve --host 127.0.0.1 --port 8000
-```
+These maintain backward compatibility with older threshold alerts and their in-memory HMAC audit chain. Set `AUDIT_SECRET_KEY` (at least 16 characters, generated randomly) before using audit operations. The audit records are not persisted across process restarts. The mock chat provider does not perform model inference or verify scientific claims.
 
-### 6. Run Simulation Benchmark
-```bash
-python simulator.py 1000
-```
+## Tests, packaging and deployment
 
----
+- Unit tests cover separable, entangled and complex states, qubit–qutrit dimensions, invalid inputs, API responses, legacy workflows and audit-signature tampering.
+- GitHub Actions tests Python 3.10–3.12; dependencies are installed from `pyproject.toml`.
+- A Dockerfile and `docker-compose.yml` are provided for the backend; do not expose the server publicly without authentication, access controls and appropriate key management.
+- Static browser pages do not execute Python. The Bell-diagonal calculator uses closed-form matrix calculations in JavaScript, so Pyodide is not necessary.
 
-## REST API Endpoints
+## Scientific limitations
 
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| `GET` | `/health` | Health check and system metadata |
-| `GET` | `/metrics` | Prometheus operational metrics |
-| `POST` | `/api/audit` | Submit task for multi-agent evaluation |
-| `POST` | `/api/chat` | Supervisory conversational query |
-| `GET` | `/api/audit/logs` | Retrieve HMAC-signed audit trail |
-
-### Example API Request
-```bash
-curl -X POST http://localhost:8000/api/audit \
-  -H "Content-Type: application/json" \
-  -d @sample_payload.json
-```
-
----
-
-## Testing
-
-```bash
-# Run full test suite
-pytest -v
-
-# Run with coverage
-pytest -v --cov=agents --cov=entanglement_witness
-```
-
----
-
-## Security Features
-
-- **Zero-PHI Outbound Interceptor:** AST and regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers
-- **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation
-- **Path Traversal Protection:** Safe file path resolution for batch operations
-- **Configurable Secret Management:** Environment-based key configuration (no hardcoded defaults)
-
----
-
-## Docker Deployment
-
-```bash
-# Using docker-compose (recommended)
-docker-compose up -d
-
-# Manual build and run
-docker build -t quantum-entanglement-witness .
-docker run -p 8000:8000 --env-file .env quantum-entanglement-witness
-```
-
----
+The PPT criterion is complete for bipartite **2×2 and 2×3** systems but not for arbitrary higher-dimensional or multipartite states. A positive partial transpose alone cannot exclude bound entanglement in larger dimensions. The browser accepts only Bell-diagonal states; it is not a general-purpose tomography, uncertainty-analysis or device-independent witness tool.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE).
