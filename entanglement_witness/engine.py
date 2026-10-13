@@ -1,5 +1,5 @@
 """
-Core Algorithmic Engine & Cryptographic / Biological Logic for Entanglement Witness & Peres-Horodecki PPT Criterion Agent.
+Legacy threshold-based telemetry evaluator; not a quantum PPT calculation.
 Domain: Quantum Information
 Standard: Peres-Horodecki PPT Criterion
 """
@@ -18,7 +18,7 @@ class FrontierDomainEngine:
         if value > cls.PRIMARY_BOUND:
             return {
                 "summary": "Primary Domain Boundary Deviation",
-                "details": f"Parameter value ({value:.3f}) exceeds operational threshold ({cls.PRIMARY_BOUND:.1f}) under Peres-Horodecki PPT Criterion.",
+                "details": f"Parameter value ({value:.3f}) exceeds configured legacy telemetry threshold ({cls.PRIMARY_BOUND:.1f}).",
                 "remediation": "Engage parameter recalibration and algorithmic verification routine.",
             }
         return None
@@ -39,7 +39,7 @@ class FrontierDomainEngine:
         if any(flag in desc_upper for flag in ["VIOLATION", "DISCORDANT", "ANOMALY", "MUTANT", "LEAK"]):
             return {
                 "summary": "Specification / Protocol Anomaly Identified",
-                "details": f"Telemetry status flag '{descriptor}' violates Peres-Horodecki PPT Criterion conformance matrix.",
+                "details": f"Telemetry status flag '{descriptor}' matches a legacy telemetry anomaly keyword.",
                 "remediation": "Execute automated rollback or secondary consensus verification.",
             }
         return None
